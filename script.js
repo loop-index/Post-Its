@@ -4,6 +4,9 @@ var noteCount = 0;
 var noteManager = new Map();
 var noteList = [];
 
+/**
+ * Handles the drag and drop functionality of the notes.
+ */
 document.onmousedown = docMouseDown;
 function docMouseDown(e) {
     e = e || window.event;
@@ -46,6 +49,9 @@ function docMouseDown(e) {
     
 }
 
+/**
+ * Handles the creation of new notes.
+ */
 document.getElementById("newNoteBtn").onclick = function (e) {
     
     let inject = `
@@ -93,6 +99,9 @@ document.getElementById("newNoteBtn").onclick = function (e) {
     noteCount += 1;
 }
 
+/**
+ * Handles the movement of notes.
+ */
 function updateDisplay(selected, preview){
     let selectedId = selected.id.slice(5);
     let oldPos = noteList.indexOf(parseInt(selectedId));
@@ -104,6 +113,9 @@ function updateDisplay(selected, preview){
     display(preview ? selectedId : null);
 }
 
+/**
+ * Handles the display of notes.
+*/
 function display(selectedId){
     let curY = 0;
 
@@ -119,13 +131,15 @@ function display(selectedId){
         let elem = document.getElementById("note-" + id);
         let originY = document.getElementById("playground").offsetTop;
         if (id != selectedId){
-            elem.style.top = String(originY + curY) + "px";
+            // elem.style.top = String(originY + curY) + "px";
+            $("#note-" + id).animate(
+                {top: String(originY + curY) + "px"}, { duration: 10, queue: false });
             elem.style.left = "0px";
             elem.style.zIndex = "0";
         } else {
             elem.style.zIndex = "1";
         }
-        curY += 102;
+        curY += 152;
     });
 }
 
