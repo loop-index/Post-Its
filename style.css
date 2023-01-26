@@ -1,15 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Fuzzy+Bubbles&display=swap');
+
 html, body {
     height: 100%;
     width: 100%;
 }
 
+body {
+    background-image: url(./bg.jpg);
+    background-size: 75%;
+}
+
 .note {
     position: absolute;
-    height: 150px;
-    width: 150px;
-    border: 1px solid black;
+    min-height: 150px;
+    height: auto;
+    min-width: 150px;
+    width: auto;
+    max-width: 300px;
+
+    padding: 5px;
+    /* border: 1px solid black; */
+    font-family: 'Fuzzy Bubbles', cursive;
+    font-size: large;
+    /* font-weight: bold; */
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
 
     overflow-wrap: break-word;
-    overflow: hidden;
+    /* overflow-y: auto; */
+    overflow-x: hidden;
+    
 }
   
+.note input{
+    font-family: 'Fuzzy Bubbles', cursive;
+    font-size: large;
+    background: rgba(0, 0, 0, 0);
+    border: none;
+    outline: none;
+    overflow-wrap: break-word;
+    overflow-x: hidden;
+}
