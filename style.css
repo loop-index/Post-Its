@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fuzzy+Bubbles&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fuzzy+Bubbles&family=Varela+Round&display=swap');
 
 html, body {
     height: 100%;
@@ -6,37 +6,48 @@ html, body {
 }
 
 body {
-    background-image: url(./bg.jpg);
-    background-size: 75%;
+    /* background-image: url(./bg.jpg);
+    background-size: 75%; */
+}
+
+#newNoteBtn {
+    height: 50px;
+    width: 100%;
+    padding: 5px 5px 5px 5px;
+    border-radius: 15px;
+    margin: 0;
 }
 
 .note {
     position: absolute;
-    min-height: 150px;
+    min-height: 100px;
     height: auto;
-    min-width: 150px;
-    width: auto;
-    max-width: 300px;
+    width: 100%;
 
-    padding: 5px;
     /* border: 1px solid black; */
-    font-family: 'Fuzzy Bubbles', cursive;
-    font-size: large;
-    /* font-weight: bold; */
+    font-family: 'Varela Round', sans-serif;
+    font-size: xx-large;
+    font-weight: bold;
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
 
     overflow-wrap: break-word;
-    /* overflow-y: auto; */
-    overflow-x: hidden;
     
+    border-radius: 15px;
 }
   
-.note input{
-    font-family: 'Fuzzy Bubbles', cursive;
-    font-size: large;
+.note input {
+    padding: 15px 15px 15px 15px;
+    font-family: 'Varela Round', sans-serif;
+    font-size: xx-large;
     background: rgba(0, 0, 0, 0);
     border: none;
     outline: none;
     overflow-wrap: break-word;
     overflow-x: hidden;
+}
+
+.note p {
+    margin: 0;
+    padding: 15px 15px 15px 15px;
+    text-transform: lowercase;
 }
