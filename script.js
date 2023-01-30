@@ -3,11 +3,21 @@ import { ranInt, collide } from "./utils.js";
 
 var noteCount = 0;
 var noteManager = new Map();
-var noteList = [[], [], []];
 var prev = 0; // used to determine when a note jumps columns
 var columns = 3;
-var noteWidth = window.innerWidth/3;
+var noteWidth = window.innerWidth/columns;
 
+var noteList = [];
+for (let i = 0; i < columns; i++) {
+    noteList.push([]);
+}
+
+window.onresize = function(e) {
+    noteWidth = window.innerWidth/columns;
+    display();
+}
+
+//maps keys to test functions
 document.onkeydown = function(e) {
     switch (e.key) {
         case "z":
@@ -81,17 +91,17 @@ document.getElementById("newNoteBtn").onclick = function (e) {
         </input>
     </div>
     `
-    document.getElementById("day1").innerHTML += inject;
+    document.getElementById("playground").innerHTML += inject;
 
     let newElem = document.getElementById("note-" + (noteCount));
     newElem.style.zIndex = String(noteCount);
-    newElem.style.backgroundColor = 
+    newElem.style.color = 
         `rgb(${ranInt(100, 255)}, ${ranInt(100, 255)}, ${ranInt(100, 255)})`;
-    newElem.style.width = "33%";
+    newElem.style.width = noteWidth + "px";
 
     let newNote = new Note(noteCount, false);
     noteManager.set(noteCount, newNote);
-    noteList[0].unshift(noteCount);
+    noteList[prev].unshift(noteCount);
 
     display();
 
@@ -142,11 +152,7 @@ function updateDisplay(selected, preview){
     let newRow = Math.max(0, Math.min(noteCount - 1, 
         Math.floor(parseInt(selected.style.top) / noteHeight)));
 
-    console.log(Col + "," + prev);
-
-    if (Col != prev){
-        prev = Col;
-    } 
+    prev = (prev == Col) ? prev : Col;
     noteList[Col].splice(newRow, 0, parseInt(selectedId));
     display(preview ? selectedId : null);
 }
