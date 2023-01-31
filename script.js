@@ -1,5 +1,7 @@
 import Note from "./note.js";
 import { ranInt, collide } from "./utils.js";
+import { db, app } from "./firebase.js";
+import { collection, getDoc, setDoc, doc } from 'https://www.gstatic.com/firebasejs/9.16.0/firebase-firestore.js';
 
 var noteCount = 0;
 var noteManager = new Map();
@@ -22,8 +24,14 @@ window.onresize = function(e) {
 document.onkeydown = function(e) {
     switch (e.key) {
         case "z":
-            console.log(noteList);
-            console.log(noteManager);
+            console.log(document.activeElement.tagName);
+            break;
+
+        case "s":
+            if (document.activeElement.tagName == "BODY"){
+                console.log("saving");
+                save();
+            }
             break;
     }
 }
@@ -231,6 +239,11 @@ function display(selectedId){
     });
 }
 
+async function save(){
+    const curUserRef = doc(db, "testUser", "mNsuVXombFYMZDNlN2xw");
+    const curUser = await getDoc(curUserRef);
+    console.log(curUser.data());
+}
 
 
 
