@@ -6,7 +6,7 @@ var noteManager = new Map();
 var prev = 0; // used to determine when a note jumps columns
 var columns = 3;
 var noteWidth = window.innerWidth/columns;
-var noteHeight = 70;
+var noteHeight = 50;
 
 var noteList = [];
 for (let i = 0; i < columns; i++) {
@@ -23,6 +23,7 @@ document.onkeydown = function(e) {
     switch (e.key) {
         case "z":
             console.log(noteList);
+            console.log(noteManager);
             break;
     }
 }
@@ -38,6 +39,7 @@ function docMouseDown(e) {
     let offX = 0; 
     let offY = 0;
     let selected = document.elementFromPoint(e.clientX, e.clientY);
+    let lastX = 0;
 
     if (selected.classList.contains("noteDisplay") || selected.parentNode.classList.contains("noteDisplay")) {
         selected = selected.classList.contains("noteDisplay") ? selected.parentNode : selected.parentNode.parentNode;
@@ -47,6 +49,7 @@ function docMouseDown(e) {
         // selected.style.height = "auto";
         offX = e.clientX - selected.offsetLeft;
         offY = e.clientY - selected.offsetTop;
+        lastX = e.clientX;
 
         prev = Math.max(0, Math.min(2, 
             Math.round(parseInt(selected.offsetLeft) / noteWidth)));
@@ -62,6 +65,24 @@ function docMouseDown(e) {
         selected.style.top = String(e.clientY - offY) + "px";
         selected.style.left = String(e.clientX - offX) + "px";
 
+        let speed = Math.max(-5, Math.min(5, (e.clientX - lastX)));
+        selected.children[0].style.transform = "rotate(" + speed + "deg)";
+        lastX = e.clientX;
+
+        if (collide(selected, $("#trash")[0])){
+            $("#trash").css({
+                "width": "75px",
+                "height": "75px",
+                "background-size": "75px 75px"
+            });
+        } else {
+            $("#trash").css({
+                "width": "50px",
+                "height": "50px",
+                "background-size": "50px 50px"
+            });
+        }
+
         updateDisplay(selected, true);
     }
     
@@ -70,7 +91,19 @@ function docMouseDown(e) {
 
         updateDisplay(selected, false);
 
-        // selected.style.zIndex = String(noteCount);
+        if (collide(selected, $("#trash")[0])){
+            let selectedId = selected.id;
+            let Col = Math.max(0, Math.min(columns - 1, 
+                Math.round(parseInt(selected.offsetLeft) / noteWidth)));
+            noteList[Col].pop();
+            noteManager.delete(parseInt(selectedId.slice(5)));
+            $("#" + selectedId).remove();
+            $("#trash").css({
+                "width": "50px",
+                "height": "50px",
+                "background-size": "50px 50px"
+            });
+        }
 
         document.onmouseup = null;
         document.onmousemove = null;
@@ -112,7 +145,7 @@ $("#newNoteBtn").on("click", function (e) {
     $(".noteInput").on("keydown", function toggleNoteInput(e) {
         if(e.keyCode == 13) {
             let noteId = this.id.slice(10);
-            let inputVal = this.value.split("=")[0];
+            let inputVal = this.value.split("@")[0];
             $("#noteText-" + noteId).text(inputVal == "" ? ">" : inputVal);
             this.style.display = "none";
             $("#noteText-" + noteId).css("display", "block");
@@ -122,20 +155,19 @@ $("#newNoteBtn").on("click", function (e) {
 
     $(".noteInput").on("input", function toggleNoteInput(e) {
         let noteId = this.id.slice(10);
-        let inputVal = this.value.split("=")[0];
+        let inputVal = this.value.split("@")[0];
         $("#noteText-" + noteId).text(inputVal == "" ? ">" : inputVal);
-        let importance = this.value.split("=")[1];
-        let red = importance ? importance.length : 0;
+        let importance = this.value.split("@")[1];
+        let red = importance ? importance.length + 1 : 0;
         $("#noteDisplay-" + noteId).css("background-color", `rgb(255, ${255 - Math.max(red - 3, 0) * 30}, ${255 - red * 40})`);
     });
 
     $(".noteText").on("dblclick",function toggleNoteInput(e) {
         display();
         let noteId = this.id.slice(9);
-        
         this.style.display = "none";
-        $("#noteInput-" + noteId).focus();
         $("#noteInput-" + noteId).css("display", "block");
+        $("#noteInput-" + noteId).focus();
     });
 
     noteCount += 1;
@@ -153,7 +185,7 @@ function updateDisplay(selected, preview){
     let Col = Math.max(0, Math.min(columns - 1, 
         Math.round(parseInt(selected.offsetLeft) / noteWidth)));
     let newRow = Math.max(0, Math.min(noteCount - 1, 
-        Math.floor(parseInt(selected.style.top) / noteHeight)));
+        Math.round((parseInt(selected.style.top) - $("#playground").offset().top) / noteHeight)));
 
     prev = (prev == Col) ? prev : Col;
     noteList[Col].splice(newRow, 0, parseInt(selectedId));
@@ -174,7 +206,7 @@ function display(selectedId){
         col.forEach((id) => {
     
             if (id != noteCount){
-                $("#noteInput-" + id).blur();
+                // $("#noteInput-" + id).blur();
                 $("#noteInput-" + id).css("display", "none");
                 $("#noteText-" + id).css("display", "block");
             }
