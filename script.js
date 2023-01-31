@@ -6,6 +6,7 @@ var noteManager = new Map();
 var prev = 0; // used to determine when a note jumps columns
 var columns = 3;
 var noteWidth = window.innerWidth/columns;
+var noteHeight = 50;
 
 var noteList = [];
 for (let i = 0; i < columns; i++) {
@@ -38,12 +39,12 @@ function docMouseDown(e) {
     let offY = 0;
     let selected = document.elementFromPoint(e.clientX, e.clientY);
 
-    if (selected.classList.contains("note") || selected.parentNode.classList.contains("note")) {
-        selected = selected.classList.contains("note") ? selected : selected.parentNode;
+    if (selected.classList.contains("noteDisplay") || selected.parentNode.classList.contains("noteDisplay")) {
+        selected = selected.classList.contains("noteDisplay") ? selected.parentNode : selected.parentNode.parentNode;
         let selectedId = selected.id.slice(5);
         noteManager.get(parseInt(selectedId)).selected = true;
 
-        selected.style.height = "auto";
+        // selected.style.height = "auto";
         offX = e.clientX - selected.offsetLeft;
         offY = e.clientY - selected.offsetTop;
 
@@ -85,19 +86,21 @@ document.getElementById("newNoteBtn").onclick = function (e) {
     //<p>Note ${noteCount}</p>
     
     let inject = `
-    <div class="note" id="note-${noteCount}">
-        <p class="noteText" id="noteText-${noteCount}" style="display:none;">></p>
-        <input type="text" value="" class="noteInput" id="noteInput-${noteCount}" placeholder="to-do">
-        </input>
+    <div class="note overflow-visible" id="note-${noteCount}">
+        <div class="noteDisplay" id="noteDisplay-${noteCount}">
+            <p class="noteText" id="noteText-${noteCount}" style="display:none;">></p>
+            <input type="text" value="" class="noteInput" id="noteInput-${noteCount}" placeholder="to-do">
+            </input>
+        </div>
     </div>
     `
     document.getElementById("playground").innerHTML += inject;
 
-    let newElem = document.getElementById("note-" + (noteCount));
-    newElem.style.zIndex = String(noteCount);
-    newElem.style.color = 
-        `rgb(${ranInt(100, 255)}, ${ranInt(100, 255)}, ${ranInt(100, 255)})`;
-    newElem.style.width = noteWidth + "px";
+    $("#note-" + noteCount).css({
+        "z-index": noteCount,
+        "rotate": ranInt(-3, 3) + "deg",
+        "width": noteWidth + "px",
+    });
 
     let newNote = new Note(noteCount, false);
     noteManager.set(noteCount, newNote);
@@ -110,7 +113,8 @@ document.getElementById("newNoteBtn").onclick = function (e) {
         if(e.keyCode == 13) {
             let noteId = this.id.slice(10);
             let noteText = document.getElementById("noteText-" + noteId);
-            noteText.innerHTML = this.value == "" ? ">" : this.value;
+            let inputVal = this.value.split("=")[0];
+            noteText.innerHTML = inputVal == "" ? ">" : inputVal;
             this.style.display = "none";
             noteText.style.display = "block";
             display();
@@ -120,10 +124,14 @@ document.getElementById("newNoteBtn").onclick = function (e) {
     $(".noteInput").on("input", function toggleNoteInput(e) {
         let noteId = this.id.slice(10);
         let noteText = document.getElementById("noteText-" + noteId);
-        noteText.innerHTML = this.value == "" ? ">" : this.value;
+        let inputVal = this.value.split("=")[0];
+        noteText.innerHTML = inputVal == "" ? ">" : inputVal;
+        let importance = this.value.split("=")[1];
+        let red = importance ? importance.length : 0;
+        $("#noteDisplay-"+noteId).css("background-color", `rgb(255, ${255 - Math.max(red - 3, 0) * 30}, ${255 - red * 40})`);
     });
 
-    $(".noteText").on("dblclick",function toggleNoteInput(e) {
+    $(".noteText").on("click",function toggleNoteInput(e) {
         display();
         let noteId = this.id.slice(9);
         let noteInput = document.getElementById("noteInput-" + noteId);
@@ -140,8 +148,6 @@ document.getElementById("newNoteBtn").onclick = function (e) {
  * Handles the movement of notes.
  */
 function updateDisplay(selected, preview){
-    // let noteHeight = selected.clientHeight * .7;
-    let noteHeight = 70;
     let selectedId = selected.id.slice(5);
 
     let oldRow = noteList[prev].indexOf(parseInt(selectedId));
@@ -164,35 +170,29 @@ function display(selectedId){
     let curX = 0;
     let curZ = 0;
     let curY = 0;
-    let noteHeight = 0;
     let originY = document.getElementById("playground").offsetTop;
     let originX = document.getElementById("playground").offsetLeft;
 
     noteList.forEach((col) => {
         col.forEach((id) => {
-            let noteText = document.getElementById("noteText-" + id);
-            let noteInput = document.getElementById("noteInput-" + id);
     
             if (id != noteCount){
-                noteInput.blur();
-                noteInput.style.display = "none";
-                noteText.style.display = "block";
+                $("#noteInput-" + id).blur();
+                $("#noteInput-" + id).css("display", "none");
+                $("#noteText-" + id).css("display", "block");
             }
     
-            let elem = document.getElementById("note-" + id);
-            // noteHeight = elem.clientHeight * .7;
-            noteHeight = 70;
             if (id != selectedId){
                 $("#note-" + id).animate(
                     {top: String(originY + curY) + "px"}, 
                     { duration: 10, queue: false});
-                elem.style.left = String(originX + curX) + "px";
-                elem.style.zIndex = curZ;
-                elem.style.height = "100px";
-                elem.style.overflow = "hidden";
-            } else {
-                elem.style.zIndex = String(noteCount);
+                $("#note-" + id).css({
+                    "left": (originX + curX) + "px",
+                    "height": "300px",
+                    "overflow": "hidden",
+                });
             }
+            $("#note-" + id).css("z-index", curZ);
             curY += noteHeight;
             curZ += 1;
         });
