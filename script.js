@@ -6,7 +6,7 @@ var noteManager = new Map();
 var prev = 0; // used to determine when a note jumps columns
 var columns = 3;
 var noteWidth = window.innerWidth/columns;
-var noteHeight = 50;
+var noteHeight = 70;
 
 var noteList = [];
 for (let i = 0; i < columns; i++) {
@@ -81,7 +81,7 @@ function docMouseDown(e) {
 /**
  * Handles the creation of new notes.
  */
-document.getElementById("newNoteBtn").onclick = function (e) {
+$("#newNoteBtn").on("click", function (e) {
 
     //<p>Note ${noteCount}</p>
     
@@ -93,8 +93,8 @@ document.getElementById("newNoteBtn").onclick = function (e) {
             </input>
         </div>
     </div>
-    `
-    document.getElementById("playground").innerHTML += inject;
+    `;
+    $("#playground").append(inject);
 
     $("#note-" + noteCount).css({
         "z-index": noteCount,
@@ -112,37 +112,34 @@ document.getElementById("newNoteBtn").onclick = function (e) {
     $(".noteInput").on("keydown", function toggleNoteInput(e) {
         if(e.keyCode == 13) {
             let noteId = this.id.slice(10);
-            let noteText = document.getElementById("noteText-" + noteId);
             let inputVal = this.value.split("=")[0];
-            noteText.innerHTML = inputVal == "" ? ">" : inputVal;
+            $("#noteText-" + noteId).text(inputVal == "" ? ">" : inputVal);
             this.style.display = "none";
-            noteText.style.display = "block";
+            $("#noteText-" + noteId).css("display", "block");
             display();
         }
     });
 
     $(".noteInput").on("input", function toggleNoteInput(e) {
         let noteId = this.id.slice(10);
-        let noteText = document.getElementById("noteText-" + noteId);
         let inputVal = this.value.split("=")[0];
-        noteText.innerHTML = inputVal == "" ? ">" : inputVal;
+        $("#noteText-" + noteId).text(inputVal == "" ? ">" : inputVal);
         let importance = this.value.split("=")[1];
         let red = importance ? importance.length : 0;
-        $("#noteDisplay-"+noteId).css("background-color", `rgb(255, ${255 - Math.max(red - 3, 0) * 30}, ${255 - red * 40})`);
+        $("#noteDisplay-" + noteId).css("background-color", `rgb(255, ${255 - Math.max(red - 3, 0) * 30}, ${255 - red * 40})`);
     });
 
-    $(".noteText").on("click",function toggleNoteInput(e) {
+    $(".noteText").on("dblclick",function toggleNoteInput(e) {
         display();
         let noteId = this.id.slice(9);
-        let noteInput = document.getElementById("noteInput-" + noteId);
         
         this.style.display = "none";
-        noteInput.style.display = "block";
-        noteInput.focus();
+        $("#noteInput-" + noteId).focus();
+        $("#noteInput-" + noteId).css("display", "block");
     });
 
     noteCount += 1;
-}
+});
 
 /**
  * Handles the movement of notes.
@@ -170,8 +167,8 @@ function display(selectedId){
     let curX = 0;
     let curZ = 0;
     let curY = 0;
-    let originY = document.getElementById("playground").offsetTop;
-    let originX = document.getElementById("playground").offsetLeft;
+    let originY = $("#playground").offset().top;
+    let originX = $("#playground").offset().left;
 
     noteList.forEach((col) => {
         col.forEach((id) => {
