@@ -4,15 +4,15 @@ import { db, app } from "./firebase.js";
 import { collection, getDoc, setDoc, doc } from 'https://www.gstatic.com/firebasejs/9.16.0/firebase-firestore.js';
 
 var noteCount = 0;
-var noteManager = new Map();
+var noteManager = {};
 var prev = 0; // used to determine when a note jumps columns
 var columns = 3;
 var noteWidth = window.innerWidth/columns;
 var noteHeight = 50;
 
-var noteList = [];
+var noteList = {};
 for (let i = 0; i < columns; i++) {
-    noteList.push([]);
+    noteList[i] = [];
 }
 
 window.onresize = function(e) {
@@ -24,7 +24,7 @@ window.onresize = function(e) {
 document.onkeydown = function(e) {
     switch (e.key) {
         case "z":
-            console.log(document.activeElement.tagName);
+            console.log(noteManager);
             break;
 
         case "s":
@@ -52,7 +52,7 @@ function docMouseDown(e) {
     if (selected.classList.contains("noteDisplay") || selected.parentNode.classList.contains("noteDisplay")) {
         selected = selected.classList.contains("noteDisplay") ? selected.parentNode : selected.parentNode.parentNode;
         let selectedId = selected.id.slice(5);
-        noteManager.get(parseInt(selectedId)).selected = true;
+        noteManager[(parseInt(selectedId))].selected = true;
 
         // selected.style.height = "auto";
         offX = e.clientX - selected.offsetLeft;
@@ -104,7 +104,7 @@ function docMouseDown(e) {
             let Col = Math.max(0, Math.min(columns - 1, 
                 Math.round(parseInt(selected.offsetLeft) / noteWidth)));
             noteList[Col].pop();
-            noteManager.delete(parseInt(selectedId.slice(5)));
+            delete noteManager[parseInt(selectedId.slice(5))];
             $("#" + selectedId).remove();
             $("#trash").css({
                 "width": "50px",
@@ -112,6 +112,7 @@ function docMouseDown(e) {
                 "background-size": "50px 50px"
             });
         }
+        save();
 
         document.onmouseup = null;
         document.onmousemove = null;
@@ -144,33 +145,47 @@ $("#newNoteBtn").on("click", function (e) {
     });
 
     let newNote = new Note(noteCount, false);
-    noteManager.set(noteCount, newNote);
+    noteManager[noteCount] = {
+        "id": noteCount,
+        "text": "",
+    };
     noteList[prev].unshift(noteCount);
 
     display();
+    save();
 
     $("#noteInput-" + noteCount).focus();
-    $(".noteInput").on("keydown", function toggleNoteInput(e) {
+    $(".noteInput").on("focusout", function toggleNoteInput(e) {
+        e.preventDefault();
+        let noteId = this.id.slice(10);
+        this.style.display = "none";
+        $("#noteText-" + noteId).css("display", "block");
+        noteManager[noteId].text = this.value;
+        display();
+        save();
+    });
+
+    $(".noteInput").on("keypress", function toggleNoteInput(e) {
+        let noteId = this.id.slice(10);
         if(e.keyCode == 13) {
-            let noteId = this.id.slice(10);
-            let inputVal = this.value.split("@")[0];
-            $("#noteText-" + noteId).text(inputVal == "" ? ">" : inputVal);
             this.style.display = "none";
             $("#noteText-" + noteId).css("display", "block");
+            noteManager[noteId].text = this.value;
+            this.blur();
             display();
+            save();
+        } else {
+            let inputVal = this.value.split("@")[0];
+            $("#noteText-" + noteId).text(inputVal == "" ? ">" : inputVal);
+            let importance = this.value.split("@")[1];
+            let red = importance ? importance.length + 1 : 0;
+            $("#noteDisplay-" + noteId).css("background-color", 
+                `rgb(255, ${255 - Math.max(red - 3, 0) * 30}, ${255 - red * 40})`);
         }
     });
 
-    $(".noteInput").on("input", function toggleNoteInput(e) {
-        let noteId = this.id.slice(10);
-        let inputVal = this.value.split("@")[0];
-        $("#noteText-" + noteId).text(inputVal == "" ? ">" : inputVal);
-        let importance = this.value.split("@")[1];
-        let red = importance ? importance.length + 1 : 0;
-        $("#noteDisplay-" + noteId).css("background-color", `rgb(255, ${255 - Math.max(red - 3, 0) * 30}, ${255 - red * 40})`);
-    });
-
     $(".noteText").on("dblclick",function toggleNoteInput(e) {
+        e.preventDefault();
         display();
         let noteId = this.id.slice(9);
         this.style.display = "none";
@@ -210,8 +225,8 @@ function display(selectedId){
     let originY = $("#playground").offset().top;
     let originX = $("#playground").offset().left;
 
-    noteList.forEach((col) => {
-        col.forEach((id) => {
+    for (let col = 0; col < columns; col++){
+        noteList[col].forEach((id) => {
     
             if (id != noteCount){
                 // $("#noteInput-" + id).blur();
@@ -236,13 +251,19 @@ function display(selectedId){
         curX += noteWidth;
         curY = 0;
         curZ = 0;
-    });
+    }
 }
 
 async function save(){
     const curUserRef = doc(db, "testUser", "mNsuVXombFYMZDNlN2xw");
     const curUser = await getDoc(curUserRef);
-    console.log(curUser.data());
+    setDoc(curUserRef, {
+        noteList: noteList,
+        noteMap: noteManager
+    }, {merge: true});
+
+
+    // console.log(curUser.data());
 }
 
 
