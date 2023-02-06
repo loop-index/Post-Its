@@ -1,4 +1,4 @@
-import Note from "./note.js";
+import { Note, getInject } from "./note.js";
 import { ranInt, collide } from "./utils.js";
 import { db, app } from "./firebase.js";
 import { collection, getDoc, setDoc, doc } from 'https://www.gstatic.com/firebasejs/9.16.0/firebase-firestore.js';
@@ -41,7 +41,6 @@ document.onkeydown = function(e) {
 
         case "s":
             if (document.activeElement.tagName == "BODY"){
-                console.log("saving");
                 save();
             }
             break;
@@ -63,15 +62,7 @@ $(document).ready(async function() {
             let importance = noteManager[id].text.split("@")[1];
             let red = importance ? importance.length + 1 : 0;
             let text = inputVal == "" ? ">" : inputVal;
-            let inject = `
-            <div class="note overflow-visible" id="note-${id}">
-                <div class="noteDisplay" id="noteDisplay-${id}">
-                    <p class="noteText" id="noteText-${id}" style="display:block;">${text}</p>
-                    <input type="text" value="" class="noteInput" id="noteInput-${id}" placeholder="to-do" style="display:none;">
-                    </input>
-                </div>
-            </div>
-            `;
+            let inject = getInject(id, text);
             $("#playground").append(inject);
             $("#noteDisplay-" + id).css("background-color", 
                 `rgb(255, ${255 - Math.max(red - 3, 0) * 30}, ${255 - red * 40})`);
@@ -120,12 +111,18 @@ document.onmousedown = function docMouseDown(e) {
         e = e || window.event;
         e.preventDefault();
     
-        selected.style.top = String(e.clientY - offY) + "px";
-        selected.style.left = String(e.clientX - offX) + "px";
+        $(selected).css({
+            "top": String(e.clientY - offY) + "px",
+            "left": String(e.clientX - offX) + "px",
+        })
 
-        let speed = Math.max(-5, Math.min(5, (e.clientX - lastX)));
-        selected.children[0].style.transform = "rotate(" + speed + "deg)";
-        lastX = e.clientX;
+        $(selected).children().css({
+            "box-shadow": "8px 8px 0 rgba(0, 0, 0, 0.5)"
+        })
+
+        // let speed = Math.max(-5, Math.min(5, (e.clientX - lastX)));
+        // selected.children[0].style.transform = "rotate(" + speed + "deg)";
+        // lastX = e.clientX;
 
         if (collide(selected, $("#trash")[0])){
             $("#trash").css({
@@ -145,7 +142,13 @@ document.onmousedown = function docMouseDown(e) {
     }
     
     function cancelDrag(e){
-        selected.style.height = "100px";
+        $(selected).css({
+            "height": "100px",
+        })
+
+        $(selected).children().css({
+            "box-shadow": "none"
+        })
 
         updateDisplay(selected, false);
 
@@ -174,15 +177,7 @@ document.onmousedown = function docMouseDown(e) {
  * Handles the creation of new notes.
  */
 $("#newNoteBtn").on("click", function (e) {
-    let inject = `
-    <div class="note overflow-visible" id="note-${noteCount}">
-        <div class="noteDisplay" id="noteDisplay-${noteCount}">
-            <p class="noteText" id="noteText-${noteCount}" style="display:none;">></p>
-            <input type="text" value="" class="noteInput" id="noteInput-${noteCount}" placeholder="to-do">
-            </input>
-        </div>
-    </div>
-    `;
+    let inject = getInject(noteCount, ">");
     $("#playground").append(inject);
 
     $("#note-" + noteCount).css({
@@ -201,8 +196,11 @@ $("#newNoteBtn").on("click", function (e) {
     display();
     save();
 
-    $("#noteInput-" + noteCount).focus();
     attachInputHandlers();
+    $("#noteText-" + noteCount).css("display", "none");
+    $("#noteInput-" + noteCount).css("display", "block");
+    $("#noteInput-" + noteCount).focus();
+    console.log("New note created");
     noteCount += 1;
 });
 
@@ -217,25 +215,22 @@ function attachInputHandlers(){
         $("#noteText-" + noteId).css("display", "block");
         noteManager[noteId].text = this.value;
         display();
-        save();
+        save(noteId + " entered");
     });
 
     $(".noteInput").on("keypress", function toggleNoteInput(e) {
         let noteId = this.id.slice(10);
+        let inputVal = this.value.split("@")[0];
+        let text = inputVal == "" ? ">" : inputVal;
+        $("#noteText-" + noteId).text(text);
+        let importance = this.value.split("@")[1];
+        let red = importance ? importance.length + 1 : 0;
+        $("#noteDisplay-" + noteId).css("background-color", 
+            `rgb(255, ${255 - Math.max(red - 3, 0) * 30}, ${255 - red * 40})`);
+        
         if(e.keyCode == 13) {
-            this.style.display = "none";
-            $("#noteText-" + noteId).css("display", "block");
-            noteManager[noteId].text = this.value;
             this.blur();
-            display();
-            save();
-        } else {
-            let inputVal = this.value.split("@")[0];
-            $("#noteText-" + noteId).text(inputVal == "" ? ">" : inputVal);
-            let importance = this.value.split("@")[1];
-            let red = importance ? importance.length + 1 : 0;
-            $("#noteDisplay-" + noteId).css("background-color", 
-                `rgb(255, ${255 - Math.max(red - 3, 0) * 30}, ${255 - red * 40})`);
+            this.value = text;
         }
     });
 
@@ -301,8 +296,12 @@ function display(selectedId, animate=true){
                     "height": "300px",
                     "overflow": "hidden",
                 });
+                $("#note-" + id).css("z-index", curZ);
+            } else {
+                $("#note-" + id).css({
+                    "z-index": noteCount,
+                });
             }
-            $("#note-" + id).css("z-index", curZ);
             curY += noteHeight;
             curZ += 1;
         });
@@ -315,14 +314,13 @@ function display(selectedId, animate=true){
 /*
 * Handles the saving of notes.
 */
-async function save(){
+async function save(message="Saved"){
     setDoc(curUserRef, {
         noteCount: noteCount,
         noteList: noteList,
         noteMap: noteManager
     });
-
-    // console.log(curUser.data());
+    console.log(message);
 }
 
 
