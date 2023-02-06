@@ -5,15 +5,18 @@ import { collection, getDoc, setDoc, doc } from 'https://www.gstatic.com/firebas
 
 var noteCount = 0;
 var noteManager = {};
+var noteList = {};
+for (let i = 0; i < columns; i++) {
+    noteList[i] = [];
+}
+
 var prev = 0; // used to determine when a note jumps columns
 var columns = 3;
 var noteWidth = window.innerWidth/columns;
 var noteHeight = 50;
 
-var noteList = {};
-for (let i = 0; i < columns; i++) {
-    noteList[i] = [];
-}
+const curUserRef = doc(db, "testUser", "mNsuVXombFYMZDNlN2xw");
+var curUser;
 
 window.onresize = function(e) {
     noteWidth = window.innerWidth/columns;
@@ -27,6 +30,15 @@ document.onkeydown = function(e) {
             console.log(noteManager);
             break;
 
+        case "x":
+            if (document.activeElement.tagName == "BODY"){
+                noteManager = {};
+                noteList = { 0: [], 1: [], 2: [] };
+                noteCount = 0;
+                save();
+            }
+            break;
+
         case "s":
             if (document.activeElement.tagName == "BODY"){
                 console.log("saving");
@@ -37,10 +49,48 @@ document.onkeydown = function(e) {
 }
 
 /**
+ * Loads notes from the database and displays them. 
+*/
+$(document).ready(async function() {
+    curUser = await getDoc(curUserRef);
+    noteCount = curUser.data()["noteCount"];
+    noteList = curUser.data()["noteList"];
+    noteManager = curUser.data()["noteMap"];
+
+    for (let col = 0; col < columns; col++){
+        noteList[col].forEach((id) => {
+            let inputVal = noteManager[id].text.split("@")[0];
+            let importance = noteManager[id].text.split("@")[1];
+            let red = importance ? importance.length + 1 : 0;
+            let text = inputVal == "" ? ">" : inputVal;
+            let inject = `
+            <div class="note overflow-visible" id="note-${id}">
+                <div class="noteDisplay" id="noteDisplay-${id}">
+                    <p class="noteText" id="noteText-${id}" style="display:block;">${text}</p>
+                    <input type="text" value="" class="noteInput" id="noteInput-${id}" placeholder="to-do" style="display:none;">
+                    </input>
+                </div>
+            </div>
+            `;
+            $("#playground").append(inject);
+            $("#noteDisplay-" + id).css("background-color", 
+                `rgb(255, ${255 - Math.max(red - 3, 0) * 30}, ${255 - red * 40})`);
+
+            $("#note-" + id).css({
+                "z-index": id,
+                "rotate": ranInt(-3, 3) + "deg",
+                "width": noteWidth + "px",
+            });
+        });
+    }
+    attachInputHandlers();
+    display(null, false);
+});
+
+/**
  * Handles the drag and drop functionality of the notes.
  */
-document.onmousedown = docMouseDown;
-function docMouseDown(e) {
+document.onmousedown = function docMouseDown(e) {
     e = e || window.event;
     e.preventDefault();
 
@@ -124,9 +174,6 @@ function docMouseDown(e) {
  * Handles the creation of new notes.
  */
 $("#newNoteBtn").on("click", function (e) {
-
-    //<p>Note ${noteCount}</p>
-    
     let inject = `
     <div class="note overflow-visible" id="note-${noteCount}">
         <div class="noteDisplay" id="noteDisplay-${noteCount}">
@@ -155,6 +202,14 @@ $("#newNoteBtn").on("click", function (e) {
     save();
 
     $("#noteInput-" + noteCount).focus();
+    attachInputHandlers();
+    noteCount += 1;
+});
+
+/*
+* Handles the input of notes.
+*/
+function attachInputHandlers(){
     $(".noteInput").on("focusout", function toggleNoteInput(e) {
         e.preventDefault();
         let noteId = this.id.slice(10);
@@ -192,9 +247,7 @@ $("#newNoteBtn").on("click", function (e) {
         $("#noteInput-" + noteId).css("display", "block");
         $("#noteInput-" + noteId).focus();
     });
-
-    noteCount += 1;
-});
+}
 
 /**
  * Handles the movement of notes.
@@ -218,7 +271,7 @@ function updateDisplay(selected, preview){
 /**
  * Handles the display of notes.
 */
-function display(selectedId){
+function display(selectedId, animate=true){
     let curX = 0;
     let curZ = 0;
     let curY = 0;
@@ -235,9 +288,14 @@ function display(selectedId){
             }
     
             if (id != selectedId){
-                $("#note-" + id).animate(
-                    {top: String(originY + curY) + "px"}, 
-                    { duration: 10, queue: false});
+                if (animate){
+                    $("#note-" + id).animate(
+                        {top: String(originY + curY) + "px"}, 
+                        { duration: 10, queue: false});
+                }
+                else{
+                    $("#note-" + id).css("top", String(originY + curY) + "px");
+                }
                 $("#note-" + id).css({
                     "left": (originX + curX) + "px",
                     "height": "300px",
@@ -254,14 +312,15 @@ function display(selectedId){
     }
 }
 
+/*
+* Handles the saving of notes.
+*/
 async function save(){
-    const curUserRef = doc(db, "testUser", "mNsuVXombFYMZDNlN2xw");
-    const curUser = await getDoc(curUserRef);
     setDoc(curUserRef, {
+        noteCount: noteCount,
         noteList: noteList,
         noteMap: noteManager
-    }, {merge: true});
-
+    });
 
     // console.log(curUser.data());
 }
