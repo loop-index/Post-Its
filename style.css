@@ -32,7 +32,7 @@ body {
     position: absolute;
     width: 33%;
     /* background-color: red; */
-    overflow: scroll;
+    /* border: 1px solid red; */
 
     font-family: Arial, Helvetica, sans-serif;
     font-size: large;
@@ -43,7 +43,7 @@ body {
     top: 5%;
     left: 5%;
     width: 90%;
-    min-height: 250px;
+    min-height: 90%;
     height: 90%;
     border-radius: 4px;
 
@@ -51,7 +51,7 @@ body {
     border: 2px solid black;
 
     font-weight: bold;
-    /* box-shadow: 4px 4px 0 rgba(0, 0, 0, 1); */
+    box-shadow: 0px -8px 0 rgba(255, 255, 255, 0.5) inset;
 
     overflow-wrap: break-all;
     
@@ -63,12 +63,13 @@ body {
     background: rgba(0, 0, 0, 0);
     border: none;
     outline: none;
-    caret-shape: block;
+    caret-shape: auto;
 }
 
 .noteText {
     margin: 0;
     padding: 15px 15px 15px 15px;
+    overflow: hidden;
 }
 
 #trash {

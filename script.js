@@ -1,8 +1,9 @@
-import { Note, getInject } from "./note.js";
+import { getInject } from "./note.js";
 import { ranInt, collide } from "./utils.js";
 import { db, app } from "./firebase.js";
 import { collection, getDoc, setDoc, doc } from 'https://www.gstatic.com/firebasejs/9.16.0/firebase-firestore.js';
 
+var columns = 3;
 var noteCount = 0;
 var noteManager = {};
 var noteList = {};
@@ -11,7 +12,6 @@ for (let i = 0; i < columns; i++) {
 }
 
 var prev = 0; // used to determine when a note jumps columns
-var columns = 3;
 var noteWidth = window.innerWidth/columns;
 var noteHeight = 50;
 
@@ -69,7 +69,7 @@ $(document).ready(async function() {
 
             $("#note-" + id).css({
                 "z-index": id,
-                "rotate": ranInt(-3, 3) + "deg",
+                // "rotate": ranInt(-3, 3) + "deg",
                 "width": noteWidth + "px",
             });
         });
@@ -93,9 +93,11 @@ document.onmousedown = function docMouseDown(e) {
     if (selected.classList.contains("noteDisplay") || selected.parentNode.classList.contains("noteDisplay")) {
         selected = selected.classList.contains("noteDisplay") ? selected.parentNode : selected.parentNode.parentNode;
         let selectedId = selected.id.slice(5);
-        noteManager[(parseInt(selectedId))].selected = true;
 
-        // selected.style.height = "auto";
+        $(selected).children().css({
+            "height": "auto",
+        });
+
         offX = e.clientX - selected.offsetLeft;
         offY = e.clientY - selected.offsetTop;
         lastX = e.clientX;
@@ -142,8 +144,8 @@ document.onmousedown = function docMouseDown(e) {
     }
     
     function cancelDrag(e){
-        $(selected).css({
-            "height": "100px",
+        $(selected).children().css({
+            "height": "90%",
         })
 
         $(selected).children().css({
@@ -182,11 +184,10 @@ $("#newNoteBtn").on("click", function (e) {
 
     $("#note-" + noteCount).css({
         "z-index": noteCount,
-        "rotate": ranInt(-3, 3) + "deg",
+        // "rotate": ranInt(-3, 3) + "deg",
         "width": noteWidth + "px",
     });
 
-    let newNote = new Note(noteCount, false);
     noteManager[noteCount] = {
         "id": noteCount,
         "text": "",
