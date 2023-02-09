@@ -15,6 +15,10 @@ body {
     text-transform: lowercase;
 }
 
+#playground {
+    height: auto;
+}
+
 .row {
     text-align: center;
 }
@@ -88,7 +92,7 @@ body {
     border: 5px dashed rgba(0, 0, 0, 0.5);
 }
 
-.rotating-border {
+.selected div{
     background: linear-gradient(90deg, black 50%, transparent 50%), 
     linear-gradient(90deg, black 50%, transparent 50%), 
     linear-gradient(0deg, black 50%, transparent 50%), 

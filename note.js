@@ -16,3 +16,5 @@ export function getInject(id, text){
     </div>
     `;
 }
+
+export var noteHeight = 50;

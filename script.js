@@ -1,5 +1,5 @@
-import { getInject } from "./note.js";
-import { ranInt, collide, startSelection, getSelection } from "./utils.js";
+import { noteHeight, getInject } from "./note.js";
+import { ranInt, collide, startSelection } from "./utils.js";
 import { db, app } from "./firebase.js";
 import { collection, getDoc, setDoc, doc } from 'https://www.gstatic.com/firebasejs/9.16.0/firebase-firestore.js';
 
@@ -9,8 +9,8 @@ var noteManager = {};
 var noteList = {};
 
 var prev = 0; // used to determine when a note jumps columns
+var oldRow = 0; // used to determine when a note jumps rows
 var noteWidth = window.innerWidth/columns;
-var noteHeight = 50;
 
 const curUserRef = doc(db, "testUser", "mNsuVXombFYMZDNlN2xw");
 var curUser;
@@ -93,25 +93,38 @@ document.onmousedown = function docMouseDown(e) {
     e = e || window.event;
     e.preventDefault();
 
-    let offX = 0; 
-    let offY = 0;
+    let offX = {}; 
+    let offY = {};
     let selected = document.elementFromPoint(e.clientX, e.clientY);
-    let lastX = 0;
+    let topSelect = null;
+    // let lastX = 0;
 
     if (selected.classList.contains("noteDisplay") || selected.parentNode.classList.contains("noteDisplay")) {
         selected = selected.classList.contains("noteDisplay") ? selected.parentNode : selected.parentNode.parentNode;
-        let selectedId = selected.id.slice(5);
+        topSelect = selected;
 
-        $(selected).children().css({
+        if (!$(selected).hasClass("selected")){
+            $(".note").removeClass("selected");
+            $(selected).addClass("selected");
+        }
+
+        $(".selected").children().css({
             "height": "auto",
         });
 
-        offX = e.clientX - selected.offsetLeft;
-        offY = e.clientY - selected.offsetTop;
-        lastX = e.clientX;
+        $(".selected").each(function() {
+            let id = $(this).attr("id").slice(5);
+            offX[id] = e.clientX - $(this).offset().left;
+            offY[id] = e.clientY - $(this).offset().top;
 
-        prev = Math.max(0, Math.min(2, 
-            Math.round(parseInt(selected.offsetLeft) / noteWidth)));
+            if ($(this).offset().top < topSelect.offsetTop){
+                topSelect = this;
+            }
+        });
+        // lastX = e.clientX;
+
+        prev = Math.round(parseInt(selected.offsetLeft) / noteWidth);
+        oldRow = Math.round((parseInt(topSelect.offsetTop) - $("#playground").offset().top) / noteHeight);
 
         document.onmousemove = dragMouseMove;
         document.onmouseup = cancelDrag;
@@ -126,55 +139,61 @@ document.onmousedown = function docMouseDown(e) {
     function dragMouseMove(e){
         e = e || window.event;
         e.preventDefault();
-    
-        $(selected).css({
-            "top": String(e.clientY - offY) + "px",
-            "left": String(e.clientX - offX) + "px",
-        })
 
-        $(selected).children().css({
-            "box-shadow": "8px 8px 0 rgba(0, 0, 0, 0.5)"
-        })
+        $("#trash").css({
+            "width": "50px",
+            "height": "50px",
+            "background-size": "50px 50px"
+        });
+
+        $(".selected").each(function(){
+            let id = $(this).attr("id").slice(5);
+            $(this).css({
+                "top": String(e.clientY - offY[id]) + "px",
+                "left": String(e.clientX - offX[id]) + "px",
+            });
+            $(this).children().css({
+                "box-shadow": "8px 8px 0 rgba(0, 0, 0, 0.5)"
+            });
+            if (collide($("#noteDisplay-" + id)[0], $("#trash")[0])){
+                $("#trash").css({
+                    "width": "75px",
+                    "height": "75px",
+                    "background-size": "75px 75px"
+                });
+                $("#trash").addClass("trash-hover");
+            } 
+        });
 
         // let speed = Math.max(-5, Math.min(5, (e.clientX - lastX)));
         // selected.children[0].style.transform = "rotate(" + speed + "deg)";
         // lastX = e.clientX;
 
-        if (collide(selected, $("#trash")[0])){
-            $("#trash").css({
-                "width": "75px",
-                "height": "75px",
-                "background-size": "75px 75px"
-            });
-        } else {
-            $("#trash").css({
-                "width": "50px",
-                "height": "50px",
-                "background-size": "50px 50px"
-            });
-        }
-
-        updateDisplay(selected, true);
+        updateDisplay(topSelect, true);
     }
     
     function cancelDrag(e){
-        $(selected).children().css({
+        $(".selected").children().css({
             "height": "90%",
-        })
-
-        $(selected).children().css({
             "box-shadow": "none"
-        })
+        });
 
-        updateDisplay(selected, false);
-
-        if (collide(selected, $("#trash")[0])){
-            let selectedId = selected.id;
+        if ($("#trash").hasClass("trash-hover")){
+            let deleteSize = $(".selected").length;
             let Col = Math.max(0, Math.min(columns - 1, 
-                Math.round(parseInt(selected.offsetLeft) / noteWidth)));
-            noteList[Col].pop();
-            delete noteManager[parseInt(selectedId.slice(5))];
-            $("#" + selectedId).remove();
+                Math.round(parseInt(topSelect.offsetLeft) / noteWidth)));
+            let newRow = Math.max(0, Math.min(noteList[Col].length - deleteSize, 
+                Math.round((parseInt(topSelect.offsetTop) - $("#playground").offset().top) / noteHeight)));
+
+            noteList[Col].splice(newRow, deleteSize);
+
+            $(".selected").each(function(){
+                let id = $(this).attr("id").slice(5);
+                delete noteManager[id];
+                $(this).remove();
+            });
+
+            $("#trash").removeClass("trash-hover");
             $("#trash").css({
                 "width": "50px",
                 "height": "50px",
@@ -182,6 +201,9 @@ document.onmousedown = function docMouseDown(e) {
             });
         }
         save();
+        $(".note").removeClass("selected");
+
+        updateDisplay(topSelect, false);
 
         document.onmouseup = null;
         document.onmousemove = null;
@@ -215,7 +237,6 @@ $("#newNoteBtn").on("click", function (e) {
     $("#noteText-" + noteCount).css("display", "none");
     $("#noteInput-" + noteCount).css("display", "block");
     $("#noteInput-" + noteCount).focus();
-    console.log("New note created");
     noteCount += 1;
 });
 
@@ -262,26 +283,27 @@ function attachInputHandlers(){
 /**
  * Handles the movement of notes.
  */
-function updateDisplay(selected, preview){
-    let selectedId = selected.id.slice(5);
-
-    let oldRow = noteList[prev].indexOf(parseInt(selectedId));
-    noteList[prev].splice(oldRow, 1);
+function updateDisplay(topSelect, preview){
+    let moveSize = $(".selected").length;
 
     let Col = Math.max(0, Math.min(columns - 1, 
-        Math.round(parseInt(selected.offsetLeft) / noteWidth)));
-    let newRow = Math.max(0, Math.min(noteCount - 1, 
-        Math.round((parseInt(selected.style.top) - $("#playground").offset().top) / noteHeight)));
+        Math.round(parseInt(topSelect.offsetLeft) / noteWidth)));
+    let newRow = Math.max(0, Math.min(noteList[Col].length - moveSize, 
+        Math.round((parseInt(topSelect.offsetTop) - $("#playground").offset().top) / noteHeight)));
 
-    prev = (prev == Col) ? prev : Col;
-    noteList[Col].splice(newRow, 0, parseInt(selectedId));
-    display(preview ? selectedId : null);
+    let moveList = noteList[prev].splice(oldRow, moveSize);
+
+    prev = Col;
+    oldRow = newRow;
+    noteList[Col].splice(newRow, 0, ...moveList);
+
+    display(preview ? topSelect : null);
 }
 
 /**
  * Handles the display of notes.
 */
-function display(selectedId, animate=true){
+function display(topSelect, animate=true){
     let curX = 0;
     let curZ = 0;
     let curY = 0;
@@ -297,7 +319,7 @@ function display(selectedId, animate=true){
                 $("#noteText-" + id).css("display", "block");
             }
     
-            if (id != selectedId){
+            if (!$("#note-" + id).hasClass("selected")){
                 if (animate){
                     $("#note-" + id).animate(
                         {top: String(originY + curY) + "px"}, 
@@ -314,7 +336,8 @@ function display(selectedId, animate=true){
                 $("#note-" + id).css("z-index", curZ);
             } else {
                 $("#note-" + id).css({
-                    "z-index": noteCount,
+                    "z-index": noteCount + 
+                    ($("#note-" + id).offset().top - topSelect.offsetTop) / noteHeight,
                 });
             }
             curY += noteHeight;

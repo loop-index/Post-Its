@@ -1,10 +1,11 @@
+import { noteHeight } from "./note.js";
+
 export function ranInt(min, max) {
     return Math.floor(Math.random() * (max - min) ) + min;
 }
 
 export function collide(el1, el2) {
     if (el1 == null || el2 == null) return false;
-    
     let rect1 = el1.getBoundingClientRect();
     let rect2 = el2.getBoundingClientRect();
 
@@ -24,11 +25,8 @@ export function collide(el1, el2) {
     return collided;
 }
 
-var selection = new Set([]);
 
-export function getSelection(){
-    return selection;
-}
+
 
 export function startSelection(e){
   e = e || window.event;
@@ -46,8 +44,7 @@ export function startSelection(e){
     "display": "block"
   });
 
-  selection.clear();
-  $(".noteDisplay").removeClass("rotating-border");
+  $(".noteDisplay").parent().removeClass("selected");
 
   document.onmousemove = selectMouseMove;
   document.onmouseup = cancelSelect;
@@ -72,7 +69,6 @@ export function startSelection(e){
       "display": "block"
     });
 
-    selection.clear();
     firstCol = checkInside($("#selection-box")[0], "noteDisplay", firstCol);
   }
 
@@ -82,7 +78,6 @@ export function startSelection(e){
     $("#selection-box").css({
       "display": "none"
     });
-    console.log(selection);
   }
 
   function checkInside(box, elemID, firstCol){
@@ -91,34 +86,22 @@ export function startSelection(e){
   
     $("." + elemID).each(function(){
       let rect2 = this.getBoundingClientRect();
-  
+
       if (!firstCol){
-        let inside = (
-          rect1.top < rect2.top &&
-          rect1.right > rect2.right &&
-          rect1.bottom > rect2.bottom &&
-          rect1.left < rect2.left
-        );
+        let inside = boxInside(rect1, rect2);
   
         if (inside){
           firstCol = rect2.left;
-          // console.log(firstCol);
         } 
       }
       if (firstCol == rect2.left){
-        let inside = (
-          rect1.top < rect2.top &&
-          rect1.right > rect2.right &&
-          rect1.bottom > rect2.bottom &&
-          rect1.left < rect2.left
-        );
+        let inside = boxInside(rect1, rect2);
   
         if (inside){
-          $(this).addClass("rotating-border");
-          selection.add(this.id);
+          $(this).parent().addClass("selected");
           noInside = false;
         } else {
-          $(this).removeClass("rotating-border");
+          $(this).parent().removeClass("selected");
         }
       }
     });
@@ -128,6 +111,18 @@ export function startSelection(e){
   
     return firstCol;
   }
+
 }
+
+function boxInside(rect1, rect2){
+  return (
+    rect1.top < rect2.top &&
+    rect1.right > rect2.right &&
+    rect1.bottom > rect2.top + noteHeight &&
+    rect1.left < rect2.left
+  );
+}
+
+
 
 
