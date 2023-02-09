@@ -1,5 +1,5 @@
 import { getInject } from "./note.js";
-import { ranInt, collide } from "./utils.js";
+import { ranInt, collide, startSelection, getSelection } from "./utils.js";
 import { db, app } from "./firebase.js";
 import { collection, getDoc, setDoc, doc } from 'https://www.gstatic.com/firebasejs/9.16.0/firebase-firestore.js';
 
@@ -7,9 +7,6 @@ var columns = 3;
 var noteCount = 0;
 var noteManager = {};
 var noteList = {};
-for (let i = 0; i < columns; i++) {
-    noteList[i] = [];
-}
 
 var prev = 0; // used to determine when a note jumps columns
 var noteWidth = window.innerWidth/columns;
@@ -33,7 +30,7 @@ document.onkeydown = function(e) {
         case "x":
             if (document.activeElement.tagName == "BODY"){
                 noteManager = {};
-                noteList = { 0: [], 1: [], 2: [] };
+                noteList = {};
                 noteCount = 0;
                 save();
             }
@@ -51,10 +48,20 @@ document.onkeydown = function(e) {
  * Loads notes from the database and displays them. 
 */
 $(document).ready(async function() {
+    console.time("loading from firestore");
     curUser = await getDoc(curUserRef);
+    console.timeEnd("loading from firestore");
+    
     noteCount = curUser.data()["noteCount"];
     noteList = curUser.data()["noteList"];
     noteManager = curUser.data()["noteMap"];
+
+    if (JSON.stringify(noteList) == "{}"){
+        for (let i = 0; i < columns; i++) {
+            noteList[i] = [];
+        }
+        save();
+    }
 
     for (let col = 0; col < columns; col++){
         noteList[col].forEach((id) => {
@@ -74,6 +81,7 @@ $(document).ready(async function() {
             });
         });
     }
+
     attachInputHandlers();
     display(null, false);
 });
@@ -107,6 +115,12 @@ document.onmousedown = function docMouseDown(e) {
 
         document.onmousemove = dragMouseMove;
         document.onmouseup = cancelDrag;
+    } 
+    else if (selected.tagName == "BODY") {
+        startSelection(e);
+        $("#selection-box").css({
+            "z-index": noteCount + 1,
+        });
     }
 
     function dragMouseMove(e){
