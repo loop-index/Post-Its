@@ -17,4 +17,4 @@ export function getInject(id, text){
     `;
 }
 
-export var noteHeight = 50;
+export var noteHeight = 120;

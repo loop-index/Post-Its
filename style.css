@@ -37,6 +37,7 @@ body {
 .note {
     position: absolute;
     width: 33%;
+    aspect-ratio: 1/1;
     /* background-color: red; */
     /* border: 1px solid red; */
 
@@ -45,15 +46,16 @@ body {
 
 .noteDisplay {
     position: relative;
-    top: 5%;
-    left: 5%;
-    width: 90%;
-    min-height: 90%;
-    height: 90%;
-    border-radius: 4px;
+    top: 2%;
+    left: 2%;
+    width: 96%;
+    min-height: 96%;
+    height: 96%;
+    border-radius: 10px;
 
     background-color: white;
-    border: 2px solid black;
+    box-shadow: 2px -2px 4px rgba(0, 0, 0, 0.2);
+    /* border: 2px solid black; */
 
     font-weight: bold;
 

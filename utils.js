@@ -46,8 +46,8 @@ export function startSelection(e){
 
   $(".noteDisplay").parent().removeClass("selected");
 
-  document.onmousemove = selectMouseMove;
-  document.onmouseup = cancelSelect;
+  document.onpointermove = selectMouseMove;
+  document.onpointerup = cancelSelect;
 
   function selectMouseMove(e){
     e = e || window.event;
@@ -73,8 +73,8 @@ export function startSelection(e){
   }
 
   function cancelSelect(e){
-    document.onmousemove = null;
-    document.onmouseup = null;
+    document.onpointermove = null;
+    document.onpointerup = null;
     $("#selection-box").css({
       "display": "none"
     });

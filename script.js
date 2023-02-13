@@ -14,10 +14,12 @@ var oldRow = 0; // used to determine when a note jumps rows
 var noteWidth = window.innerWidth/columns;
 
 const curUserRef = doc(db, "testUser", "mNsuVXombFYMZDNlN2xw");
+// const curUserRef = doc(db, "testUser", "lol");
 var curUser;
 
 window.onresize = function(e) {
     noteWidth = window.innerWidth/columns;
+    // $(".noteDisplay").css("width", noteWidth * 0.9 + "px");
     display();
 }
 
@@ -58,8 +60,11 @@ $(document).ready(async function() {
     noteManager = curUser.data()["noteMap"];
     curNoteSize = curUser.data()["curNoteSize"];
 
-    if (JSON.stringify(noteList) == "{}"){
-        for (let i = 0; i < columns; i++) {
+    console.log(Object.keys(noteList).length)
+
+    if (Object.keys(noteList).length < columns){
+        let newColumns = Object.keys(noteList).length;
+        for (let i = newColumns; i < columns; i++) {
             noteList[i] = [];
         }
         save();
@@ -91,7 +96,7 @@ $(document).ready(async function() {
 /**
  * Handles the drag and drop functionality of the notes.
  */
-document.onmousedown = function docMouseDown(e) {
+document.onpointerdown = function docMouseDown(e) {
     e = e || window.event;
     e.preventDefault();
 
@@ -128,10 +133,10 @@ document.onmousedown = function docMouseDown(e) {
         prev = Math.round(parseInt(selected.offsetLeft) / noteWidth);
         oldRow = Math.round((parseInt(topSelect.offsetTop) - $("#playground").offset().top) / noteHeight);
 
-        document.onmousemove = dragMouseMove;
-        document.onmouseup = cancelDrag;
+        document.onpointermove = dragMouseMove;
+        document.onpointerup = cancelDrag;
     } 
-    else if (selected.tagName == "BODY") {
+    else if (selected.tagName != "BUTTON") {
         startSelection(e);
         $("#selection-box").css({
             "z-index": noteCount + 1,
@@ -178,7 +183,7 @@ document.onmousedown = function docMouseDown(e) {
     function cancelDrag(e){
         $(".selected").children().css({
             "height": "90%",
-            "box-shadow": "none"
+            "box-shadow": "2px -2px 4px rgba(0, 0, 0, 0.2)"
         });
 
         if ($("#trash").hasClass("trash-hover")){
@@ -209,8 +214,8 @@ document.onmousedown = function docMouseDown(e) {
 
         updateDisplay(topSelect, false);
 
-        document.onmouseup = null;
-        document.onmousemove = null;
+        document.onpointerup = null;
+        document.onpointermove = null;
     }
     
 }
@@ -287,7 +292,7 @@ function attachInputHandlers(){
         let red = inputVal[1] ? inputVal[1].length + 1 : 0;
         $("#noteDisplay-" + noteId).css("background-color", 
             `rgb(255, ${255 - Math.max(red - 3, 0) * 30}, ${255 - red * 40})`);
-        return text;
+        return input.value;
     }
 }
 
@@ -341,7 +346,7 @@ function display(topSelect, animate=true){
                 }
                 $("#note-" + id).css({
                     "left": (originX + curX) + "px",
-                    "height": "300px",
+                    "height": "150px",
                     "overflow": "hidden",
                 });
                 $("#note-" + id).css("z-index", curZ);
