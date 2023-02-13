@@ -7,6 +7,7 @@ var columns = 3;
 var noteCount = 0;
 var noteManager = {};
 var noteList = {};
+var curNoteSize = 0; 
 
 var prev = 0; // used to determine when a note jumps columns
 var oldRow = 0; // used to determine when a note jumps rows
@@ -55,6 +56,7 @@ $(document).ready(async function() {
     noteCount = curUser.data()["noteCount"];
     noteList = curUser.data()["noteList"];
     noteManager = curUser.data()["noteMap"];
+    curNoteSize = curUser.data()["curNoteSize"];
 
     if (JSON.stringify(noteList) == "{}"){
         for (let i = 0; i < columns; i++) {
@@ -140,6 +142,7 @@ document.onmousedown = function docMouseDown(e) {
         e = e || window.event;
         e.preventDefault();
 
+        $("#trash").removeClass("trash-hover");
         $("#trash").css({
             "width": "50px",
             "height": "50px",
@@ -191,6 +194,7 @@ document.onmousedown = function docMouseDown(e) {
                 let id = $(this).attr("id").slice(5);
                 delete noteManager[id];
                 $(this).remove();
+                curNoteSize--;
             });
 
             $("#trash").removeClass("trash-hover");
@@ -231,13 +235,16 @@ $("#newNoteBtn").on("click", function (e) {
     noteList[prev].unshift(noteCount);
 
     display();
-    save();
 
     attachInputHandlers();
     $("#noteText-" + noteCount).css("display", "none");
     $("#noteInput-" + noteCount).css("display", "block");
     $("#noteInput-" + noteCount).focus();
+    $("#noteDisplay-" + noteCount).css("background-color", `white`);
+
     noteCount += 1;
+    curNoteSize += 1;
+    save();
 });
 
 /*
@@ -247,23 +254,16 @@ function attachInputHandlers(){
     $(".noteInput").on("focusout", function toggleNoteInput(e) {
         e.preventDefault();
         let noteId = this.id.slice(10);
+        getInputText(this);
         this.style.display = "none";
         $("#noteText-" + noteId).css("display", "block");
         noteManager[noteId].text = this.value;
-        display();
+        display($(this));
         save(noteId + " entered");
     });
 
     $(".noteInput").on("keypress", function toggleNoteInput(e) {
-        let noteId = this.id.slice(10);
-        let inputVal = this.value.split("@")[0];
-        let text = inputVal == "" ? ">" : inputVal;
-        $("#noteText-" + noteId).text(text);
-        let importance = this.value.split("@")[1];
-        let red = importance ? importance.length + 1 : 0;
-        $("#noteDisplay-" + noteId).css("background-color", 
-            `rgb(255, ${255 - Math.max(red - 3, 0) * 30}, ${255 - red * 40})`);
-        
+        let text = getInputText(this);
         if(e.keyCode == 13) {
             this.blur();
             this.value = text;
@@ -278,6 +278,17 @@ function attachInputHandlers(){
         $("#noteInput-" + noteId).css("display", "block");
         $("#noteInput-" + noteId).focus();
     });
+
+    function getInputText(input){
+        let noteId = input.id.slice(10);
+        let inputVal = input.value.split("@");
+        let text = inputVal[0] == "" ? ">" : inputVal[0];
+        $("#noteText-" + noteId).text(text);
+        let red = inputVal[1] ? inputVal[1].length + 1 : 0;
+        $("#noteDisplay-" + noteId).css("background-color", 
+            `rgb(255, ${255 - Math.max(red - 3, 0) * 30}, ${255 - red * 40})`);
+        return text;
+    }
 }
 
 /**
@@ -353,10 +364,11 @@ function display(topSelect, animate=true){
 * Handles the saving of notes.
 */
 async function save(message="Saved"){
-    setDoc(curUserRef, {
+    await setDoc(curUserRef, {
         noteCount: noteCount,
         noteList: noteList,
-        noteMap: noteManager
+        noteMap: noteManager,
+        curNoteSize: curNoteSize,
     });
     console.log(message);
 }
