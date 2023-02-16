@@ -1,5 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Fuzzy+Bubbles&family=Varela+Round&display=swap');
 
+:root {
+    --yellow: #fbc324;
+    --white: #faf0e6;
+}
+
 html, body {
     height: 100%;
     width: 100%;
@@ -10,11 +15,43 @@ body {
     background-size: 75%; */
     background-color: rgb(214, 209, 202);
 
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: Varela Round, sans-serif;
     font-size: xx-large;
     font-weight: bold;
     text-transform: lowercase;
 }
+
+/* nav */
+
+#logo {
+    font-size: xx-large;
+    color: var(--yellow);
+}
+
+#user {
+    font-size: x-large;
+    color: var(--yellow);
+}
+
+#newNoteInput {
+    border-radius: 50px 0px 0px 50px;
+    border: solid 1px black;
+    z-index: 1;
+    font-family: Varela Round, sans-serif;
+}
+
+#newNoteBtn {
+    background-color: var(--yellow);
+    border: solid 1px black;
+}
+
+#searchBtn {
+    border-radius: 0px 50px 50px 0px;
+    background-color: var(--yellow);
+    border: solid 1px black;
+}
+
+/* main */
 
 #playground {
     height: auto;
@@ -22,16 +59,6 @@ body {
 
 .row {
     text-align: center;
-}
-
-#newNoteBtn {
-    height: 50px;
-    width: 100%;
-    padding: 5px 5px 5px 5px;
-    border-radius: 15px;
-    margin: 0;
-    border: none;
-    font-weight: bold;
 }
 
 .note {
@@ -54,12 +81,11 @@ body {
     border-radius: 10px;
 
     background-color: white;
-    box-shadow: 2px -2px 4px rgba(0, 0, 0, 0.2);
-    /* border: 2px solid black; */
+    /* box-shadow: 2px -2px 4px rgba(0, 0, 0, 0.2); */
+    border: 2px solid black;
 
     font-weight: bold;
 
-    overflow-wrap: break-all;
     
 }
   
@@ -70,13 +96,23 @@ body {
     border: none;
     outline: none;
     caret-shape: auto;
+    overflow: hidden;
+    height: 100%;
 }
 
 .noteText {
     margin: 0;
     padding: 15px 15px 15px 15px;
     overflow: hidden;
+    overflow-wrap: break-all;
 }
+
+.noteControl {
+    float: right;
+    color: black;
+}
+
+/* footer */
 
 #trash {
     position: absolute;

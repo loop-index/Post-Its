@@ -11,7 +11,7 @@ var curNoteSize = 0;
 
 var prev = 0; // used to determine when a note jumps columns
 var oldRow = 0; // used to determine when a note jumps rows
-var noteWidth = window.innerWidth/columns;
+var noteWidth = window.innerWidth * 0.33;
 
 const curUserRef = doc(db, "testUser", "mNsuVXombFYMZDNlN2xw");
 // const curUserRef = doc(db, "testUser", "lol");
@@ -30,7 +30,7 @@ document.onkeydown = function(e) {
             console.log(noteManager);
             break;
 
-        case "x":
+        case "Delete":
             if (document.activeElement.tagName == "BODY"){
                 noteManager = {};
                 noteList = {};
@@ -86,10 +86,10 @@ $(document).ready(async function() {
                 // "rotate": ranInt(-3, 3) + "deg",
                 "width": noteWidth + "px",
             });
+            attachInputHandlers(id);
         });
     }
 
-    attachInputHandlers();
     display(null, false);
 });
 
@@ -106,8 +106,11 @@ document.onpointerdown = function docMouseDown(e) {
     let topSelect = null;
     // let lastX = 0;
 
-    if (selected.classList.contains("noteDisplay") || selected.parentNode.classList.contains("noteDisplay")) {
-        selected = selected.classList.contains("noteDisplay") ? selected.parentNode : selected.parentNode.parentNode;
+    // console.log($._data(selected, "events"));
+
+    if ($(selected).parents(".noteControl").length == 0 
+            && $(selected).parents(".note").length > 0) {
+        selected = $(selected).parents(".note")[0];
         topSelect = selected;
 
         if (!$(selected).hasClass("selected")){
@@ -136,11 +139,13 @@ document.onpointerdown = function docMouseDown(e) {
         document.onpointermove = dragMouseMove;
         document.onpointerup = cancelDrag;
     } 
-    else if (selected.tagName != "BUTTON") {
+    else if (selected.tagName == "BODY") {
         startSelection(e);
         $("#selection-box").css({
             "z-index": noteCount + 1,
         });
+    }
+    else {
     }
 
     function dragMouseMove(e){
@@ -183,7 +188,8 @@ document.onpointerdown = function docMouseDown(e) {
     function cancelDrag(e){
         $(".selected").children().css({
             "height": "90%",
-            "box-shadow": "2px -2px 4px rgba(0, 0, 0, 0.2)"
+            // "box-shadow": "2px -2px 4px rgba(0, 0, 0, 0.2)"
+            "box-shadow": "none"
         });
 
         if ($("#trash").hasClass("trash-hover")){
@@ -224,8 +230,10 @@ document.onpointerdown = function docMouseDown(e) {
  * Handles the creation of new notes.
  */
 $("#newNoteBtn").on("click", function (e) {
-    let inject = getInject(noteCount, ">");
+    let addText = $("#newNoteInput").val() == "" ? ">" : $("#newNoteInput").val();
+    let inject = getInject(noteCount, addText);
     $("#playground").append(inject);
+    $("#newNoteInput").val("");
 
     $("#note-" + noteCount).css({
         "z-index": noteCount,
@@ -235,16 +243,19 @@ $("#newNoteBtn").on("click", function (e) {
 
     noteManager[noteCount] = {
         "id": noteCount,
-        "text": "",
+        "text": addText == ">" ? "" : addText,
     };
     noteList[prev].unshift(noteCount);
 
     display();
 
-    attachInputHandlers();
-    $("#noteText-" + noteCount).css("display", "none");
-    $("#noteInput-" + noteCount).css("display", "block");
-    $("#noteInput-" + noteCount).focus();
+    attachInputHandlers(noteCount);
+
+    if (addText == ">"){
+        $("#noteText-" + noteCount).css("display", "none");
+        $("#noteInput-" + noteCount).css("display", "block");
+        $("#noteInput-" + noteCount).focus();
+    }
     $("#noteDisplay-" + noteCount).css("background-color", `white`);
 
     noteCount += 1;
@@ -255,10 +266,9 @@ $("#newNoteBtn").on("click", function (e) {
 /*
 * Handles the input of notes.
 */
-function attachInputHandlers(){
-    $(".noteInput").on("focusout", function toggleNoteInput(e) {
-        e.preventDefault();
-        let noteId = this.id.slice(10);
+function attachInputHandlers(noteId){
+    $("#noteInput-"+noteId).on("focusout", function (e) {
+        // e.preventDefault();
         getInputText(this);
         this.style.display = "none";
         $("#noteText-" + noteId).css("display", "block");
@@ -267,28 +277,30 @@ function attachInputHandlers(){
         save(noteId + " entered");
     });
 
-    $(".noteInput").on("keypress", function toggleNoteInput(e) {
+    $("#noteInput-"+noteId).on("keypress", function (e) {
         let text = getInputText(this);
         if(e.keyCode == 13) {
-            this.blur();
-            this.value = text;
+            $(this).blur();
+            $(this).val(text);
         }
     });
 
-    $(".noteText").on("dblclick",function toggleNoteInput(e) {
-        e.preventDefault();
+    $("#noteEdit-"+noteId).on("click",function (e) {
+        // e.preventDefault();
         display();
-        let noteId = this.id.slice(9);
-        this.style.display = "none";
+        $("#noteText-" + noteId).css("display", "none");
         $("#noteInput-" + noteId).css("display", "block");
         $("#noteInput-" + noteId).focus();
+        let length = $("#noteInput-" + noteId).val().length;
+        $("#noteInput-" + noteId).get()[0].setSelectionRange(length, length);
     });
 
     function getInputText(input){
         let noteId = input.id.slice(10);
         let inputVal = input.value.split("@");
         let text = inputVal[0] == "" ? ">" : inputVal[0];
-        $("#noteText-" + noteId).text(text);
+        
+        $("#noteText-" + noteId + " .noteTextContent").text(text);
         let red = inputVal[1] ? inputVal[1].length + 1 : 0;
         $("#noteDisplay-" + noteId).css("background-color", 
             `rgb(255, ${255 - Math.max(red - 3, 0) * 30}, ${255 - red * 40})`);
@@ -346,7 +358,7 @@ function display(topSelect, animate=true){
                 }
                 $("#note-" + id).css({
                     "left": (originX + curX) + "px",
-                    "height": "150px",
+                    "height": "300px",
                     "overflow": "hidden",
                 });
                 $("#note-" + id).css("z-index", curZ);
