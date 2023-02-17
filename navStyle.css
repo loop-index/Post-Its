@@ -1,0 +1,60 @@
+:root {
+    --yellow: #fbc324;
+    --white: #faf0e6;
+}
+
+/* nav */
+nav {
+    vertical-align: middle;
+}
+
+#logo {
+    font-size: xx-large;
+    color: var(--yellow);
+}
+
+#user {
+    font-size: x-large;
+    color: var(--yellow);
+}
+
+#newNoteInput {
+    border-radius: 50px 0px 0px 50px;
+    border: solid 1px black;
+    z-index: 1;
+    font-family: Varela Round, sans-serif;
+}
+
+#newNoteBtn {
+    background-color: var(--yellow);
+    border: solid 1px black;
+}
+
+#searchBtn {
+    border-radius: 0px 50px 50px 0px;
+    background-color: var(--yellow);
+    border: solid 1px black;
+}
+
+/* column */
+/* #newColBtn {
+    position: absolute;
+    right: 2%;
+} */
+
+#menu i {
+    color: var(--yellow);
+}
+
+#col-row {
+    text-align: center;
+}
+
+#newColBtn{
+    color: var(--yellow);
+}
+
+#newColBtn:hover{
+    color: var(--white);
+}
+

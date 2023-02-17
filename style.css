@@ -21,44 +21,10 @@ body {
     text-transform: lowercase;
 }
 
-/* nav */
-
-#logo {
-    font-size: xx-large;
-    color: var(--yellow);
-}
-
-#user {
-    font-size: x-large;
-    color: var(--yellow);
-}
-
-#newNoteInput {
-    border-radius: 50px 0px 0px 50px;
-    border: solid 1px black;
-    z-index: 1;
-    font-family: Varela Round, sans-serif;
-}
-
-#newNoteBtn {
-    background-color: var(--yellow);
-    border: solid 1px black;
-}
-
-#searchBtn {
-    border-radius: 0px 50px 50px 0px;
-    background-color: var(--yellow);
-    border: solid 1px black;
-}
-
 /* main */
 
 #playground {
     height: auto;
-}
-
-.row {
-    text-align: center;
 }
 
 .note {
@@ -112,18 +78,22 @@ body {
     color: black;
 }
 
+.noteEdit:hover {
+    color: var(--yellow);
+}
+
+.noteTrash:hover {
+    color: var(--yellow);
+}
+
 /* footer */
 
 #trash {
+    color: black;
+    font-size: xx-large;
     position: absolute;
     bottom: 5%;
     right: 5%;
-    width: 50px;
-    height: 50px;
-
-    background-image: url(./trash.png);
-    background-repeat: no-repeat;
-    background-size: 50px;
 }
 
 #selection-box {

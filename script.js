@@ -5,8 +5,8 @@ import { collection, getDoc, setDoc, doc } from 'https://www.gstatic.com/firebas
 
 var columns = 3;
 var noteCount = 0;
-var noteManager = {};
-var noteList = {};
+export var noteManager = {};
+export var noteList = {};
 var curNoteSize = 0; 
 
 var prev = 0; // used to determine when a note jumps columns
@@ -106,8 +106,6 @@ document.onpointerdown = function docMouseDown(e) {
     let topSelect = null;
     // let lastX = 0;
 
-    // console.log($._data(selected, "events"));
-
     if ($(selected).parents(".noteControl").length == 0 
             && $(selected).parents(".note").length > 0) {
         selected = $(selected).parents(".note")[0];
@@ -154,9 +152,7 @@ document.onpointerdown = function docMouseDown(e) {
 
         $("#trash").removeClass("trash-hover");
         $("#trash").css({
-            "width": "50px",
-            "height": "50px",
-            "background-size": "50px 50px"
+            "font-size": "xx-large"
         });
 
         $(".selected").each(function(){
@@ -170,9 +166,7 @@ document.onpointerdown = function docMouseDown(e) {
             });
             if (collide($("#noteDisplay-" + id)[0], $("#trash")[0])){
                 $("#trash").css({
-                    "width": "75px",
-                    "height": "75px",
-                    "background-size": "75px 75px"
+                    "font-size": "xxx-large"
                 });
                 $("#trash").addClass("trash-hover");
             } 
@@ -188,7 +182,6 @@ document.onpointerdown = function docMouseDown(e) {
     function cancelDrag(e){
         $(".selected").children().css({
             "height": "90%",
-            // "box-shadow": "2px -2px 4px rgba(0, 0, 0, 0.2)"
             "box-shadow": "none"
         });
 
@@ -196,10 +189,10 @@ document.onpointerdown = function docMouseDown(e) {
             let deleteSize = $(".selected").length;
             let Col = Math.max(0, Math.min(columns - 1, 
                 Math.round(parseInt(topSelect.offsetLeft) / noteWidth)));
-            let newRow = Math.max(0, Math.min(noteList[Col].length - deleteSize, 
+            let Row = Math.max(0, Math.min(noteList[Col].length - deleteSize, 
                 Math.round((parseInt(topSelect.offsetTop) - $("#playground").offset().top) / noteHeight)));
 
-            noteList[Col].splice(newRow, deleteSize);
+            noteList[Col].splice(Row, deleteSize);
 
             $(".selected").each(function(){
                 let id = $(this).attr("id").slice(5);
@@ -210,15 +203,13 @@ document.onpointerdown = function docMouseDown(e) {
 
             $("#trash").removeClass("trash-hover");
             $("#trash").css({
-                "width": "50px",
-                "height": "50px",
-                "background-size": "50px 50px"
+                "font-size": "xx-large"
             });
         }
-        save();
         $(".note").removeClass("selected");
 
         updateDisplay(topSelect, false);
+        save();
 
         document.onpointerup = null;
         document.onpointermove = null;
@@ -295,6 +286,17 @@ function attachInputHandlers(noteId){
         $("#noteInput-" + noteId).get()[0].setSelectionRange(length, length);
     });
 
+    $("#noteTrash-"+noteId).on("click",function (e) {
+        // e.preventDefault();
+        let col = noteManager[noteId].col;
+        let row = noteManager[noteId].row;
+        noteList[col].splice(row, 1);
+        delete noteManager[noteId];
+        save();
+        $("#note-" + noteId).remove();
+        display();
+    });
+
     function getInputText(input){
         let noteId = input.id.slice(10);
         let inputVal = input.value.split("@");
@@ -331,10 +333,11 @@ function updateDisplay(topSelect, preview){
 /**
  * Handles the display of notes.
 */
-function display(topSelect, animate=true){
+export function display(topSelect, animate=true){
     let curX = 0;
     let curZ = 0;
     let curY = 0;
+    let curRow = 0;
     let originY = $("#playground").offset().top;
     let originX = $("#playground").offset().left;
 
@@ -342,7 +345,6 @@ function display(topSelect, animate=true){
         noteList[col].forEach((id) => {
     
             if (id != noteCount){
-                // $("#noteInput-" + id).blur();
                 $("#noteInput-" + id).css("display", "none");
                 $("#noteText-" + id).css("display", "block");
             }
@@ -362,6 +364,9 @@ function display(topSelect, animate=true){
                     "overflow": "hidden",
                 });
                 $("#note-" + id).css("z-index", curZ);
+
+                noteManager[id].col = col;
+                noteManager[id].row = curRow;
             } else {
                 $("#note-" + id).css({
                     "z-index": noteCount + 
@@ -370,10 +375,12 @@ function display(topSelect, animate=true){
             }
             curY += noteHeight;
             curZ += 1;
+            curRow += 1;
         });
         curX += noteWidth;
         curY = 0;
         curZ = 0;
+        curRow = 0;
     }
 }
 

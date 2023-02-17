@@ -14,6 +14,7 @@
   <script src="https://kit.fontawesome.com/5f24f51df9.js" crossorigin="anonymous"></script>
   <!-- custom css -->
   <link href="style.css" rel="stylesheet" type="text/css" />
+  <link href="navStyle.css" rel="stylesheet" type="text/css" />
 
 </head>
 
@@ -21,12 +22,11 @@
   <script type="module" src="firebase.js"></script>
 
   <nav class="navbar navbar-expand-sm bg-dark navbar-dark">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#">
-        <!-- <img src="./icon.jpg" alt="Avatar Logo" style="width:40px;" class="rounded-pill"> -->
+    <div class="container-fluid row">
+      <a class="navbar-brand col-2" href="#">
         <i class="fa-solid fa-note-sticky" id="logo"></i> 
       </a>
-      <form class="d-flex">
+      <form class="d-flex col-7">
         <div class="input-group rounded-pill">
           <input class="form-control" id="newNoteInput" type="text" placeholder="to-do" style="z-index: 1;">
           <button class="btn" id="newNoteBtn" type="button">
@@ -37,22 +37,34 @@
           </button>
         </div>
       </form>
-      <a href="#">
-        <i class="fa-solid fa-user" id="user"></i> 
-      </a>
+      <span class="col-3 row justify-content-evenly" id="menu">
+        <span class="col-2" id="newColBtn">
+          <i class="fa-solid fa-folder-plus"></i>
+        </span>
+        <a class="col-2" href="#">
+          <i class="fa-solid fa-user" id="user"></i> 
+        </a>
+      </span>
     </div>
   </nav>
+  
+  <!-- column headers -->
 
-  <div class="row">
-    <div class="col-4">today</div>
-    <div class="col-4">tomorrow</div>
-    <div class="col-4">after</div>
+  <div id="col-row">
+    <span class="container-fluid row justify-content-evenly">
+    </span>
   </div>
-  <div id="playground"></div>
-    <div id="selection-box" style="display:none;"></div>
 
-  <div id="trash"></div>
+  <!-- notes -->
 
+  <div id="playground">
+    <div id="selection-box" style="display:none;">
+    </div>
+  </div>
+
+  <div id="trash">
+    <i class="fa-solid fa-trash-can"></i>
+  </div>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/js/bootstrap.min.js"></script>
   <script src="script.js" type="module"></script>
