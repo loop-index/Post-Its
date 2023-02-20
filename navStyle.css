@@ -30,6 +30,11 @@ nav {
     border: solid 1px black;
 }
 
+#newTabBtn {
+    background-color: cyan;
+    border: solid 1px black;
+}
+
 #searchBtn {
     border-radius: 0px 50px 50px 0px;
     background-color: var(--yellow);
@@ -47,7 +52,12 @@ nav {
 }
 
 #col-row {
-    text-align: center;
+    /* text-align: center; */
+}
+
+#columns {
+    padding: 0;
+    margin: 0;
 }
 
 #newColBtn{
@@ -58,3 +68,14 @@ nav {
     color: var(--white);
 }
 
+.col-header {
+}
+
+.col-header p {
+    font-size: x-large;
+    margin: 0;
+}
+
+.col-header:hover {
+    background-color: var(--white);
+}

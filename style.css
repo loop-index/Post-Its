@@ -43,7 +43,6 @@ body {
     left: 2%;
     width: 96%;
     min-height: 96%;
-    height: 96%;
     border-radius: 10px;
 
     background-color: white;
@@ -51,13 +50,11 @@ body {
     border: 2px solid black;
 
     font-weight: bold;
-
-    
+    padding: 15px 15px 15px 15px;
 }
   
 .noteInput {
     max-width: 100%;
-    padding: 15px 15px 15px 15px;
     background: rgba(0, 0, 0, 0);
     border: none;
     outline: none;
@@ -68,7 +65,6 @@ body {
 
 .noteText {
     margin: 0;
-    padding: 15px 15px 15px 15px;
     overflow: hidden;
     overflow-wrap: break-all;
 }
@@ -84,6 +80,14 @@ body {
 
 .noteTrash:hover {
     color: var(--yellow);
+}
+
+.tab .noteDisplay {
+    text-transform: capitalize;
+    background-color: var(--yellow);
+    min-height: 60px;
+    height: 60px;
+    width: 90%;
 }
 
 /* footer */

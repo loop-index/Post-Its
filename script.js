@@ -60,8 +60,6 @@ $(document).ready(async function() {
     noteManager = curUser.data()["noteMap"];
     curNoteSize = curUser.data()["curNoteSize"];
 
-    console.log(Object.keys(noteList).length)
-
     if (Object.keys(noteList).length < columns){
         let newColumns = Object.keys(noteList).length;
         for (let i = newColumns; i < columns; i++) {
@@ -110,6 +108,10 @@ document.onpointerdown = function docMouseDown(e) {
             && $(selected).parents(".note").length > 0) {
         selected = $(selected).parents(".note")[0];
         topSelect = selected;
+        $(".note").not(".search").animate({
+            "opacity": "1",
+        }, 100);
+        $(".note").removeClass("search");
 
         if (!$(selected).hasClass("selected")){
             $(".note").removeClass("selected");
@@ -127,6 +129,18 @@ document.onpointerdown = function docMouseDown(e) {
 
             if ($(this).offset().top < topSelect.offsetTop){
                 topSelect = this;
+            }
+
+            // tab behavior
+            if ($(this).hasClass("tab")){
+                let col = noteManager[id].col;
+                let row = noteManager[id].row;
+                for (let i = row; i < noteList[col].length; i++){
+                    let newId = noteList[col][i];
+                    $("#note-" + newId).addClass("selected");
+                    offX[newId] = e.clientX - $("#note-" + newId).offset().left;
+                    offY[newId] = e.clientY - $("#note-" + newId).offset().top;
+                }
             }
         });
         // lastX = e.clientX;
@@ -180,8 +194,12 @@ document.onpointerdown = function docMouseDown(e) {
     }
     
     function cancelDrag(e){
-        $(".selected").children().css({
+        $(".selected").not(".tab").children().css({
             "height": "90%",
+            "box-shadow": "none"
+        });
+
+        $(".tab").children().css({
             "box-shadow": "none"
         });
 
@@ -221,6 +239,15 @@ document.onpointerdown = function docMouseDown(e) {
  * Handles the creation of new notes.
  */
 $("#newNoteBtn").on("click", function (e) {
+    addNewNote();
+});
+
+$("#newTabBtn").on("click", function (e) {
+    let id = addNewNote();
+    $("#note-" + id).addClass("tab");
+});
+
+function addNewNote(){
     let addText = $("#newNoteInput").val() == "" ? ">" : $("#newNoteInput").val();
     let inject = getInject(noteCount, addText);
     $("#playground").append(inject);
@@ -252,7 +279,8 @@ $("#newNoteBtn").on("click", function (e) {
     noteCount += 1;
     curNoteSize += 1;
     save();
-});
+    return noteCount - 1;
+}
 
 /*
 * Handles the input of notes.
@@ -360,10 +388,12 @@ export function display(topSelect, animate=true){
                 }
                 $("#note-" + id).css({
                     "left": (originX + curX) + "px",
-                    "height": "300px",
                     "overflow": "hidden",
+                    "z-index": curZ
                 });
-                $("#note-" + id).css("z-index", curZ);
+                $("#note-" + id).not(".tab").css({
+                    "height": "300px",
+                });
 
                 noteManager[id].col = col;
                 noteManager[id].row = curRow;

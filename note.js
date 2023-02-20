@@ -7,7 +7,7 @@ export class Note {
 
 export function getInject(id, text){
     return `
-    <div class="note overflow-visible" id="note-${id}">
+    <div class="note overflow-visible draggable" id="note-${id}">
         <div class="noteDisplay overflow-hidden" id="noteDisplay-${id}">
             <p class="noteText" id="noteText-${id}" style="display:block;">
                 <span class="noteControl" style="display: none">
