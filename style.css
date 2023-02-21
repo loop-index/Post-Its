@@ -35,6 +35,7 @@ body {
     /* border: 1px solid red; */
 
     font-size: large;
+    touch-action: none;
 }
 
 .noteDisplay {
@@ -51,6 +52,7 @@ body {
 
     font-weight: bold;
     padding: 15px 15px 15px 15px;
+    touch-action: none;
 }
   
 .noteInput {
@@ -61,17 +63,20 @@ body {
     caret-shape: auto;
     overflow: hidden;
     height: 100%;
+    touch-action: none;
 }
 
 .noteText {
     margin: 0;
     overflow: hidden;
     overflow-wrap: break-all;
+    touch-action: none;
 }
 
 .noteControl {
     float: right;
     color: black;
+    touch-action: none;
 }
 
 .noteEdit:hover {
@@ -83,7 +88,7 @@ body {
 }
 
 .tab .noteDisplay {
-    text-transform: capitalize;
+    text-transform: uppercase;
     background-color: var(--yellow);
     min-height: 60px;
     height: 60px;

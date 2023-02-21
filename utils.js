@@ -123,6 +123,15 @@ function boxInside(rect1, rect2){
   );
 }
 
+export function getNewRow(list, target, targetID){
+  for (let i = 0; i < list.length; i++){
+    if (list[i] != targetID && $("#note-" + list[i]).offset().top > target){
+      return i - 1;
+    }
+  }
+  return list.length;
+}
+
 
 
 

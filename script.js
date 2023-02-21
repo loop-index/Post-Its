@@ -1,9 +1,9 @@
 import { noteHeight, getInject } from "./note.js";
-import { ranInt, collide, startSelection } from "./utils.js";
+import { ranInt, collide, startSelection, getNewRow } from "./utils.js";
 import { db, app } from "./firebase.js";
 import { collection, getDoc, setDoc, doc } from 'https://www.gstatic.com/firebasejs/9.16.0/firebase-firestore.js';
 
-var columns = 3;
+var columns = 2;
 var noteCount = 0;
 export var noteManager = {};
 export var noteList = {};
@@ -11,15 +11,15 @@ var curNoteSize = 0;
 
 var prev = 0; // used to determine when a note jumps columns
 var oldRow = 0; // used to determine when a note jumps rows
-var noteWidth = window.innerWidth * 0.33;
+var noteWidth = Math.min(240, window.innerWidth / columns);
 
 const curUserRef = doc(db, "testUser", "mNsuVXombFYMZDNlN2xw");
 // const curUserRef = doc(db, "testUser", "lol");
 var curUser;
 
 window.onresize = function(e) {
-    noteWidth = window.innerWidth/columns;
-    // $(".noteDisplay").css("width", noteWidth * 0.9 + "px");
+    noteWidth = Math.min(240, window.innerWidth / columns);
+    $(".note").css("width", noteWidth + "px");
     display();
 }
 
@@ -51,9 +51,9 @@ document.onkeydown = function(e) {
  * Loads notes from the database and displays them. 
 */
 $(document).ready(async function() {
-    console.time("loading from firestore");
+    // console.time("loading from firestore");
     curUser = await getDoc(curUserRef);
-    console.timeEnd("loading from firestore");
+    // console.timeEnd("loading from firestore");
     
     noteCount = curUser.data()["noteCount"];
     noteList = curUser.data()["noteList"];
@@ -74,7 +74,7 @@ $(document).ready(async function() {
             let importance = noteManager[id].text.split("@")[1];
             let red = importance ? importance.length + 1 : 0;
             let text = inputVal == "" ? ">" : inputVal;
-            let inject = getInject(id, text);
+            let inject = getInject(id, text, noteManager[id].type);
             $("#playground").append(inject);
             $("#noteDisplay-" + id).css("background-color", 
                 `rgb(255, ${255 - Math.max(red - 3, 0) * 30}, ${255 - red * 40})`);
@@ -104,8 +104,9 @@ document.onpointerdown = function docMouseDown(e) {
     let topSelect = null;
     // let lastX = 0;
 
-    if ($(selected).parents(".noteControl").length == 0 
-            && $(selected).parents(".note").length > 0) {
+    if ($(selected).hasClass("noteMove") || ($(selected).parents(".noteControl").length == 0 
+            && $(selected).parents(".note").length > 0)) {
+        let move = $(selected).hasClass("noteMove")
         selected = $(selected).parents(".note")[0];
         topSelect = selected;
         $(".note").not(".search").animate({
@@ -132,11 +133,14 @@ document.onpointerdown = function docMouseDown(e) {
             }
 
             // tab behavior
-            if ($(this).hasClass("tab")){
+            if ($(this).hasClass("tab") && !move){
                 let col = noteManager[id].col;
                 let row = noteManager[id].row;
-                for (let i = row; i < noteList[col].length; i++){
+                for (let i = row + 1; i < noteList[col].length; i++){
                     let newId = noteList[col][i];
+                    if ($("#note-" + newId).hasClass("tab")){
+                        break;
+                    }
                     $("#note-" + newId).addClass("selected");
                     offX[newId] = e.clientX - $("#note-" + newId).offset().left;
                     offY[newId] = e.clientY - $("#note-" + newId).offset().top;
@@ -239,17 +243,16 @@ document.onpointerdown = function docMouseDown(e) {
  * Handles the creation of new notes.
  */
 $("#newNoteBtn").on("click", function (e) {
-    addNewNote();
+    addNewNote("note");
 });
 
 $("#newTabBtn").on("click", function (e) {
-    let id = addNewNote();
-    $("#note-" + id).addClass("tab");
+    let id = addNewNote("tab");
 });
 
-function addNewNote(){
+function addNewNote(type){
     let addText = $("#newNoteInput").val() == "" ? ">" : $("#newNoteInput").val();
-    let inject = getInject(noteCount, addText);
+    let inject = getInject(noteCount, addText, type);
     $("#playground").append(inject);
     $("#newNoteInput").val("");
 
@@ -262,6 +265,7 @@ function addNewNote(){
     noteManager[noteCount] = {
         "id": noteCount,
         "text": addText == ">" ? "" : addText,
+        "type": type,
     };
     noteList[prev].unshift(noteCount);
 
@@ -346,8 +350,10 @@ function updateDisplay(topSelect, preview){
 
     let Col = Math.max(0, Math.min(columns - 1, 
         Math.round(parseInt(topSelect.offsetLeft) / noteWidth)));
+    // let newRow = Math.max(0, Math.min(noteList[Col].length - moveSize, 
+    //     Math.round((parseInt(topSelect.offsetTop) - $("#playground").offset().top) / noteHeight)));
     let newRow = Math.max(0, Math.min(noteList[Col].length - moveSize, 
-        Math.round((parseInt(topSelect.offsetTop) - $("#playground").offset().top) / noteHeight)));
+        getNewRow(noteList[Col], topSelect.offsetTop, topSelect.id.slice(5))));
 
     let moveList = noteList[prev].splice(oldRow, moveSize);
 
@@ -370,8 +376,9 @@ export function display(topSelect, animate=true){
     let originX = $("#playground").offset().left;
 
     for (let col = 0; col < columns; col++){
-        noteList[col].forEach((id) => {
-    
+        for (let row = 0; row < noteList[col].length; row++){
+            let id = noteList[col][row];
+
             if (id != noteCount){
                 $("#noteInput-" + id).css("display", "none");
                 $("#noteText-" + id).css("display", "block");
@@ -403,10 +410,15 @@ export function display(topSelect, animate=true){
                     ($("#note-" + id).offset().top - topSelect.offsetTop) / noteHeight,
                 });
             }
-            curY += noteHeight;
+            if ($("#note-" + noteList[col][row+1]).hasClass("tab") && 
+                    !$("#note-" + id).hasClass("tab")){
+                curY += 300;
+            } else {
+                curY += noteHeight;
+            }
             curZ += 1;
             curRow += 1;
-        });
+        }
         curX += noteWidth;
         curY = 0;
         curZ = 0;
