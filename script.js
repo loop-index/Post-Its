@@ -179,9 +179,6 @@ document.onpointerdown = function docMouseDown(e) {
                 "top": String(e.clientY - offY[id]) + "px",
                 "left": String(e.clientX - offX[id]) + "px",
             });
-            $(this).children().css({
-                "box-shadow": "8px 8px 0 rgba(0, 0, 0, 0.5)"
-            });
             if (collide($("#noteDisplay-" + id)[0], $("#trash")[0])){
                 $("#trash").css({
                     "font-size": "xxx-large"
@@ -352,9 +349,9 @@ function updateDisplay(topSelect, preview){
         Math.round(parseInt(topSelect.offsetLeft) / noteWidth)));
     // let newRow = Math.max(0, Math.min(noteList[Col].length - moveSize, 
     //     Math.round((parseInt(topSelect.offsetTop) - $("#playground").offset().top) / noteHeight)));
-    let newRow = Math.max(0, Math.min(noteList[Col].length - moveSize, 
+    let newRow = Math.max(0, Math.min(noteList[Col].length - moveSize + 1, 
         getNewRow(noteList[Col], topSelect.offsetTop, topSelect.id.slice(5))));
-
+    
     let moveList = noteList[prev].splice(oldRow, moveSize);
 
     prev = Col;
@@ -408,6 +405,14 @@ export function display(topSelect, animate=true){
                 $("#note-" + id).css({
                     "z-index": noteCount + 
                     ($("#note-" + id).offset().top - topSelect.offsetTop) / noteHeight,
+                });
+
+                $("#noteDisplay-" + id).css({
+                    // "box-shadow": (originX + curX - $("#note-" + id).offset().left) + "px " 
+                    //             + (originY + curY - $("#note-" + id).offset().top) + "px "
+                    //             + "0 rgba(0, 0, 0, 0.1), 8px 8px 0 rgba(0, 0, 0, 0.5)"
+
+                    "box-shadow": "8px 8px 0 rgba(0, 0, 0, 0.5)"
                 });
             }
             if ($("#note-" + noteList[col][row+1]).hasClass("tab") && 
