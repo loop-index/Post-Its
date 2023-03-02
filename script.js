@@ -345,14 +345,15 @@ function attachInputHandlers(noteId){
 function updateDisplay(topSelect, preview){
     let moveSize = $(".selected").length;
 
+    let moveList = noteList[prev].splice(oldRow, moveSize);
+
     let Col = Math.max(0, Math.min(columns - 1, 
         Math.round(parseInt(topSelect.offsetLeft) / noteWidth)));
     // let newRow = Math.max(0, Math.min(noteList[Col].length - moveSize, 
     //     Math.round((parseInt(topSelect.offsetTop) - $("#playground").offset().top) / noteHeight)));
-    let newRow = Math.max(0, Math.min(noteList[Col].length - moveSize + 1, 
+    let newRow = Math.max(0, Math.min(noteList[Col].length + 1, 
         getNewRow(noteList[Col], topSelect.offsetTop, topSelect.id.slice(5))));
     
-    let moveList = noteList[prev].splice(oldRow, moveSize);
 
     prev = Col;
     oldRow = newRow;
